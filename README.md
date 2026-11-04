@@ -3,23 +3,12 @@
 Upload company documents (PDF, DOCX, TXT) and ask questions across all of them.
 Answers are generated only from the documents and include source references.
 
-**Stack:** Python · LangChain · Hugging Face Embeddings · ChromaDB · BM25 · Cross-Encoder Reranker · Groq · Streamlit
-
-## Features
-- Multi-document Q&A: ask one question across all uploaded files
-- Hybrid search: vector (meaning) + BM25 (keywords), merged with Reciprocal Rank Fusion
-- Reranking: a cross-encoder keeps the most relevant chunks
-- Source references: document name and page shown with every answer
-- Follow-up questions: rewritten into standalone queries using chat history
-- Evaluation script: measures retrieval hit rate and answer accuracy
+**Stack:** Python · LangChain · Hugging Face Embeddings · ChromaDB · Groq · Streamlit
 
 ## Project Structure
 ```
-├── app.py                # Streamlit frontend
-├── rag.py                # RAG backend (load, chunk, hybrid search, rerank, answer)
-├── evaluate.py           # Accuracy measurement
-├── eval_docs/            # Test documents for evaluation
-├── eval_questions.json   # Test questions and expected keywords
+├── app.py            # Streamlit frontend
+├── rag.py            # RAG backend (load, chunk, embed, search, answer)
 ├── requirements.txt
 ├── .env.example
 └── README.md
@@ -27,11 +16,10 @@ Answers are generated only from the documents and include source references.
 
 ## How it works
 1. Upload multiple documents in the sidebar
-2. Documents are split into chunks (recursive splitter, 800 / 150 overlap), each tagged with its document name and page
-3. Chunks are embedded (all-MiniLM-L6-v2) and stored in ChromaDB, and a BM25 keyword index is built
-4. Your question retrieves the top 20 candidates using vector and keyword search together
-5. A cross-encoder reranks them and keeps the best 6
-6. Groq LLM answers using only that context and shows the sources
+2. Documents are split into chunks (recursive splitter, 1000 / 200 overlap)
+3. Chunks are embedded (all-MiniLM-L6-v2) and stored in ChromaDB
+4. Your question retrieves the top-5 matching chunks from all documents
+5. Groq LLM answers using only that context and shows the sources
 
 ## Run locally
 ```bash
@@ -39,10 +27,3 @@ pip install -r requirements.txt
 cp .env.example .env        # add your GROQ_API_KEY
 streamlit run app.py
 ```
-
-## Evaluate
-```bash
-# put documents in eval_docs/ and edit eval_questions.json
-python evaluate.py
-```
-Compares vector only, hybrid, rerank and hybrid + rerank, and saves `eval_results.csv`.
